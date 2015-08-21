@@ -1,0 +1,10 @@
+{
+    "port": 3030,
+    "API": {
+        "port": 3000,
+        "host": "localhost",
+        "authUrl": "/api/user/newUser",
+        "logInUlr": "/api/user/login"
+    }
+
+}

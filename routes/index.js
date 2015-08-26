@@ -1,7 +1,11 @@
 var express = require('express');
 var router = express.Router();
+var newUserRegistration = require("../chatbot").newUserRegistration;
 var addNegotiator = require("../chatbot").addNegotiator;
 var getNegotiators = require("../chatbot").getNegotiators;
+var logInAndStart = require("../chatbot").logInAndStart;
+var getSocketKey = require("../chatbot").getSocketKey;
+var setSocketConnection = require("../chatbot").setSocketConnection;
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -15,17 +19,30 @@ router.get('/', function(req, res, next) {
   });
 });
 
-router.post('/api/addNegotiator', function(req, res, next) {
-    addNegotiator(function () {
-        res.redirect('/');
+router.get('/api/getNegotiator', function(req, res, next) {
+    newUserRegistration(function (user) {
+
+        addNegotiator(user);
+        res.json(user);
     });
 });
-router.get('/api/getNegotiator', function(req, res, next) {
-    addNegotiator(function (negotiator) {
-        if (typeof negotiator == "string"){
-            negotiator = JSON.parse(negotiator);
-        }
-        res.json(negotiator);
+
+router.post('/api/logInAndStart', function(req, res, next) {
+    var body = req.body,
+        data = {
+            username: body.name,
+            password: body.password
+        };
+    console.log(body, data);
+
+    logInAndStart(body, function (user) {
+        getSocketKey(user, function (data) {
+            console.log(data);
+            setSocketConnection(data.socketKey)
+        });
+        res.json({
+            user: user
+        });
     });
 
 });

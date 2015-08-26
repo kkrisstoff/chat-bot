@@ -6,3 +6,24 @@ body {
 a {
   color: #00B7FF;
 }
+
+.message-item span{
+    display: inline-block;
+}
+
+/*user*/
+.user-controls{
+    width: 32px;
+    height: 32px;
+    /*background: url(../images/player.png) no-repeat -64px 50%;*/
+}
+.user-controls.started{
+    width: 32px;
+    height: 32px;
+    background: url(../images/player.png) no-repeat 0 50%;
+}
+.user-controls.stopped{
+    width: 32px;
+    height: 32px;
+    background: url(../images/player.png) no-repeat -64px 50%;
+}

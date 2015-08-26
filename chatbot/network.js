@@ -44,8 +44,9 @@ exports.getJSON = function(options, onResult){
  * @param onResult callback to pass the results JSON object(s) back
  */
 exports.postJSON = function(options, data, onResult){
-    console.log("rest::postJSON");
-    console.log(options);
+    //console.log("rest::postJSON");
+    //console.log(options);
+    //console.log(data);
     var req = http.request(options, function(res){
         console.log('STATUS: ' + res.statusCode);
         var output = '';
@@ -56,6 +57,7 @@ exports.postJSON = function(options, data, onResult){
         });
 
         res.on('end', function() {
+            var headers = res.headers;
 //            var obj;
 //            try {
 //                obj = JSON.parse(output);//eval("(" + output + ")");
@@ -64,7 +66,7 @@ exports.postJSON = function(options, data, onResult){
 //            }
 //            console.log("##output:");
 //            console.log(obj);
-            onResult(res.statusCode, output);
+            onResult(res.statusCode, output, headers);
         });
     });
     req.on('error', function(err) {

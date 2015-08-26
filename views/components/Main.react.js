@@ -32,13 +32,13 @@ module.exports = Main = React.createClass({
         var self = this;
 
         network.ajaxRequest({
-            method: 'GET',
+            type: 'GET',
             url: 'api/getNegotiator',
             callback: function (data) {
-                console.log(typeof data);
                 console.log(data);
                 var user = {
-                    username: data.user.username,
+                    id: data.id,
+                    username: data.username,
                     password: '123',
                     isStarted: false
                 };

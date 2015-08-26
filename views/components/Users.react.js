@@ -8,6 +8,7 @@ module.exports = Users = React.createClass({
     render: function(){
         console.log(this.props);
         var content = this.props.users.map(function(user){
+            console.log(user);
             return (
                 <User user={user} />
                 )

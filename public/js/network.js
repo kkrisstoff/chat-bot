@@ -5,15 +5,14 @@
     }
 
     Network.prototype.ajaxRequest = function (obj) {
-        var body = obj.body || null,
+        var self = this,
+            body = obj.body || null,
             timeout = obj.timeout || 20000,
-            self = this,
 
             success = function (data, status, jqXHR) {
-                var parsedData = self.parseJSON(data);
-                console.log('--------RESPONSE: ',parsedData);
-                console.log(typeof parsedData);
-                obj.callback(parsedData, jqXHR);
+                //var parsedData = self.parseJSON(data);
+                console.log('--------RESPONSE: ',data);
+                obj.callback(data, jqXHR);
             },
 
             error = function (jqXHR, status, errorThrown) {
@@ -21,20 +20,21 @@
                     console.log(jqXHR);
                     obj.errorCallback(jqXHR);
                 }
+            },
+            reqObj = {
+                method: obj.type,
+                url: self.baseUrl + obj.url,
+                crossDomain: true,
+                data: body,
+                //contentType: self.contentType,
+                //dataType: "text",
+                timeout: timeout,
+                success: success,
+                error: error
             };
 
-        console.log("---------REQUEST: ",obj);
-        return $.ajax({
-            type: obj.type,
-            url: self.baseUrl+obj.url,
-            crossDomain: true,
-            data: body,
-            contentType: self.contentType,
-            dataType: "text",
-            timeout: timeout,
-            success: success,
-            error: error
-        });
+        console.log("---------REQUEST: ", reqObj);
+        return $.ajax(reqObj);
     };
 
     Network.prototype.parseJSON = function (raw) {

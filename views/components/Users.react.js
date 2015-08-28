@@ -7,7 +7,13 @@ module.exports = Users = React.createClass({
 
     render: function(){
         console.log(this.props);
-        var content = this.props.users.map(function(user){
+        var users = this.props.users,
+            usersArr = [],
+            content;
+        for (var user in users) {
+            usersArr.push(users[user]);
+        }
+        content = usersArr.map(function(user){
             console.log(user);
             return (
                 <User user={user} />

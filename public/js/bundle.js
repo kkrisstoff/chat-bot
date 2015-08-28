@@ -19764,14 +19764,15 @@ module.exports = Main = React.createClass({displayName: "Main",
         var self = this;
 
         network.ajaxRequest({
-            type: 'GET',
-            url: 'api/getNegotiator',
+            type: 'POST',
+            url: 'api/addNegotiator',
             callback: function (data) {
                 console.log(data);
                 var user = {
                     id: data.id,
                     username: data.username,
                     password: '123',
+                    isLoggedIn: !!data.sid,
                     isStarted: false
                 };
                 self.addItemToState(user);
@@ -19785,9 +19786,12 @@ module.exports = Main = React.createClass({displayName: "Main",
     },
 
     addItemToState: function (item) {
-        this.state.users.push(item);
+        console.log("New User added", item);
+        var newUsers = [].concat(this.state.users);
+        newUsers.push(item);
+
         this.setState({
-            users: this.state.users
+            users: newUsers
         });
     },
 
@@ -19831,11 +19835,11 @@ module.exports = TopControls = React.createClass({displayName: "TopControls",
 /** @jsx React.DOM */
 var React = require('react');
 
-function logInAndStart(name, pass) {
-    console.log(name, pass);
+function connectAndStart(id) {
+    console.log("id: ", id);
     network.ajaxRequest({
         type: 'POST',
-        url: 'api/logInAndStart',
+        url: 'api/connectAndStart',
         callback: function (data) {
             console.log("logInAndStart", data);
 
@@ -19845,8 +19849,7 @@ function logInAndStart(name, pass) {
             console.log(arguments);
         },
         body: {
-            name: name,
-            password: pass
+            id: id
         }
     });
 }
@@ -19863,10 +19866,24 @@ module.exports = User = React.createClass({displayName: "User",
             username = newUserState.username,
             password = newUserState.password;
         newUserState.isStarted = !this.state.user.isStarted;
-        console.log("newUserState", newUserState);
-        logInAndStart(username, password);
+        connectAndStart(id);
         this.setState({
             user: newUserState
+        });
+    },
+    onGoClicked: function (id, e) {
+
+        network.ajaxRequest({
+            type: 'POST',
+            url: 'api/sentMessage',
+            callback: function (data) {
+                console.log("sentMessage: DONE");
+
+            },
+            errorCallback: function () {
+                console.log("ERROR");
+                console.log(arguments);
+            }
         });
     },
     render: function(){
@@ -19874,12 +19891,14 @@ module.exports = User = React.createClass({displayName: "User",
             name = user.username,
             pass = user.password,
             id = user.id,
-            status = user.isStarted ? 'started' : 'stopped';
+            isStartedClass = user.isStarted ? 'started' : 'stopped',
+            isLoggedInClass = user.isLoggedIn ? 'logged' : '';
         console.log(id);
         return (
             React.createElement("li", {className: "message-item"}, 
-                React.createElement("span", {className: "user", "data-pass": pass}, name, " "), 
-                React.createElement("span", {className: "user-controls " + status, onClick: this.onClick.bind(this, id)})
+                React.createElement("span", {className: "user " + isLoggedInClass}, name), 
+                React.createElement("span", {className: "user-controls " + isStartedClass, onClick: this.onClick.bind(this, id)}), 
+                React.createElement("span", {onClick: this.onGoClicked.bind(this, id)}, "GO!")
             )
             )
     }
@@ -19895,7 +19914,13 @@ module.exports = Users = React.createClass({displayName: "Users",
 
     render: function(){
         console.log(this.props);
-        var content = this.props.users.map(function(user){
+        var users = this.props.users,
+            usersArr = [],
+            content;
+        for (var user in users) {
+            usersArr.push(users[user]);
+        }
+        content = usersArr.map(function(user){
             console.log(user);
             return (
                 React.createElement(User, {user: user})

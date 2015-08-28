@@ -32,14 +32,15 @@ module.exports = Main = React.createClass({
         var self = this;
 
         network.ajaxRequest({
-            type: 'GET',
-            url: 'api/getNegotiator',
+            type: 'POST',
+            url: 'api/addNegotiator',
             callback: function (data) {
                 console.log(data);
                 var user = {
                     id: data.id,
                     username: data.username,
                     password: '123',
+                    isLoggedIn: !!data.sid,
                     isStarted: false
                 };
                 self.addItemToState(user);
@@ -53,9 +54,12 @@ module.exports = Main = React.createClass({
     },
 
     addItemToState: function (item) {
-        this.state.users.push(item);
+        console.log("New User added", item);
+        var newUsers = [].concat(this.state.users);
+        newUsers.push(item);
+
         this.setState({
-            users: this.state.users
+            users: newUsers
         });
     },
 

@@ -1,10 +1,10 @@
 var crypto = require("crypto");
 var network = require("./network");
 var config = require("../config");
-//var SockJS = require("sockjs-client");
-var SockJS = require('sockjs-client-node');
+var Connection = require("./connection");
+var negotiators = {};
+var connections = {};
 
-var negotiators = [];
 
 function getSid(str) {
     var reg = /sid=\S+/,
@@ -13,18 +13,18 @@ function getSid(str) {
     return resultArray.slice(4, -1);
 }
 exports.getNegotiators = function () {
-    console.log(negotiators.length);
+    console.log("getNegotiators: ", negotiators.length);
     return negotiators;
 };
 
 exports.addNegotiator = function (user) {
-    negotiators.push(user);
+    console.log("addNegotiator: ", user);
+
+    negotiators[user.id] = user;
 };
 
-exports.logInAndStart = function (data, cb) {
-    var userName = data.name,
-        password = data.password,
-        options = {
+exports.logIn = function (user, cb) {
+    var options = {
             host: config.get('API:host'),
             port: config.get('API:port'),
             path: config.get('API:logInUrl'),
@@ -36,21 +36,22 @@ exports.logInAndStart = function (data, cb) {
             }
         },
         body = {
-            username: userName,
-            password: password
+            username: user.username,
+            password: user.password
         };
     network.postJSON(options, JSON.stringify(body), function (status, data, headers) {
-        console.log(status, data);
-        var user = {},
-            cookies = headers['set-cookie'],
+        var cookies = headers['set-cookie'],
             sid = getSid(cookies[0]);
 
+        console.log("SID for " + user.username + ": " + sid);
         user.sid = sid;
-        if (typeof data == "string") {
-            data = parseJSON(data);
+        if (status == 200){
+            cb(null, user);
+        } else {
+            cb({
+                errorStatus: status
+            });
         }
-        user.data = data
-        cb(user);
     });
 };
 
@@ -80,12 +81,19 @@ exports.newUserRegistration = function (cb) {
         }
         user = data.user;
         user.password = '123';
-        cb(user);
+        if (status == 200){
+            cb(null, user);
+        } else {
+            cb({
+                errorStatus: status
+            });
+        }
     });
 };
 
-exports.getSocketKey = function (data, cb) {
-    var sid = data.sid,
+exports.getSocketKey = function (id, cb) {
+    var negotiator = negotiators[id],
+        sid = negotiator.sid,
         options = {
             host: config.get('API:host'),
             port: config.get('API:port'),
@@ -98,26 +106,51 @@ exports.getSocketKey = function (data, cb) {
                 "Cache": "no-cache"
             }
         };
+
     network.postJSON(options, null, function (status, data) {
         console.log(status, data);
-
-        cb(data);
+        if (typeof data == "string") {
+            data = parseJSON(data);
+        }
+        if (status == 200){
+            cb(null, data.socketKey);
+        } else {
+            cb({
+                errorStatus: status
+            });
+        }
     });
 };
 
 exports.setSocketConnection = function (socketKey, cb) {
+    console.log("setSocketConnection");
     console.log(socketKey);
-    var client = SockJS.create("http://localhost:3000");
-    client.on('connection', function () {
-        console.log("connection is established");
-    });
-    client.on('data', function (msg) {
-        console.log(msg);
-    });
-    client.on('error', function (e) {
-        console.error("something went wrong");
-    });
-    client.write("Have some text you mighty SockJS server!");
+
+    var options = {
+            socketKey: socketKey,
+            prefix: 'http://localhost:3000/chatConnection',
+            socketOpts: {debug: true}
+        };
+    connections[socketKey] = new Connection(options);
+
+    cb(null, connections[socketKey]);
+};
+
+exports.sentMessage = function (connection, cb) {
+    var count = 0,
+        int = setInterval(function(){ timer() }, 1000);
+
+    function timer() {
+        connection.socket.send(JSON.stringify({text: count + " dsfdsfsdf"}));
+        count ++;
+        if (count >= 10) stopTimer();
+    }
+
+    function stopTimer() {
+        clearInterval(int);
+    }
+
+    cb(null);
 };
 
 function parseJSON(raw) {

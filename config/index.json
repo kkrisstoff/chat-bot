@@ -3,6 +3,7 @@
     "API": {
         "port": 3000,
         "host": "localhost",
+        "socketPrefix": "",
         "authUrl": "/api/user/newUser",
         "logInUrl": "/api/user/login",
         "getSocketKeyUrl": "/api/chat/socketKey"
